@@ -68,7 +68,10 @@ Second is a residual graph represented in the same format as the input flow netw
 Number of Nodes = V = 6</br>
 Number of Edges = E = 9</br>
 
-<img src="image-path" alt="Mountain View"/>
+Below is the visual representation of the input flow network.</br>
+<a data-flickr-embed="true"  href="https://www.flickr.com/photos/147116053@N02/29564622486/in/dateposted-public/" title="flow_network_problem"><img src="https://c7.staticflickr.com/9/8404/29564622486_c50ee9d1aa_z.jpg" width="640" height="276" alt="flow_network_problem"></a><script async src="//embedr.flickr.com/assets/client-code.js" charset="utf-8"></script></br>
+Below is the final residual graph indicating the max flow.</br>
+<a data-flickr-embed="true"  href="https://www.flickr.com/photos/147116053@N02/29598720085/in/dateposted-public/" title="flow_network_solved_2"><img src="https://c6.staticflickr.com/9/8010/29598720085_629431f2ab_z.jpg" width="640" height="290" alt="flow_network_solved_2"></a><script async src="//embedr.flickr.com/assets/client-code.js" charset="utf-8"></script>
 
 <b>Output characteristics:</b></br>
 1) The max flow of 19 is indeed the maximum possible.</br>
