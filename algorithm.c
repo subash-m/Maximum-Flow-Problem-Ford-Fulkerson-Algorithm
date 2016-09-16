@@ -4,6 +4,7 @@
 #include <string.h>
 #include <limits.h>
 
+//Structure to store an edge of adjacency List
 typedef struct adjListEdge{
 	int node;
 	int capacity;
@@ -11,24 +12,31 @@ typedef struct adjListEdge{
 	struct adjListEdge *next;
 }Edge;
 
+//Structure to store a node of Queue
 struct queueNode{
 	int data;
 	struct queueNode *ptr;
 }*front, *rear, *temp;
 
+// Function declarations
 Edge* addEdge(Edge*, int, int);
 void createQueue();
 void enqueue(int);
 int dequeue();
 bool queueEmpty();
 bool BFS( Edge**, int, int, int, int**);
-int maximumFlowAlg( Edge**, int, int, int);
+void maximumFlowAlg( Edge**, int, int, int);
 
+/*Initialises the Queue*/
 void createQueue(){
 	front = NULL;
 	rear = NULL;
 }
 
+/*Input
+	node - node to be inserted
+  Description
+	Inserts the node to the queue*/
 void enqueue(int node){
 	if(rear == NULL){
 		rear = (struct queueNode*) malloc (sizeof(struct queueNode));
@@ -45,6 +53,10 @@ void enqueue(int node){
 	}
 }
 
+/*Return
+	int - the node which is removed from queue
+  Description
+	Removes a node from the queue*/
 int dequeue(){
 	struct queueNode* front1 = front;
 	int node;
@@ -67,6 +79,11 @@ int dequeue(){
 	}
 }
 
+/*Return
+	bool - TRUE  = Queue empty
+	       FALSE = Queue not empty
+  Description
+	Check whether the queue is empty or not*/
 bool queueEmpty()
 {
      if ((front == NULL) && (rear == NULL))
@@ -75,6 +92,15 @@ bool queueEmpty()
 	return false;
 }
 
+/*Input
+	currentHead 	- the pointer from where a new node is to be inserted
+	newNode	    	- the vertex value of newNode
+	newCapacity 	- the vertex capacity of newNode
+	residualCapacity- by Default the value is 0
+  Return
+	Edge*		- the pointer to the current node
+  Description
+	Inserts an new edge from the pointer where it is pointed*/
 Edge* addEdge( Edge* currentHead, int newNode, int newCapacity){
 	Edge* head = (Edge*) malloc (sizeof(Edge));
 	head->node = newNode;
@@ -84,17 +110,32 @@ Edge* addEdge( Edge* currentHead, int newNode, int newCapacity){
 	return head;
 }
 
+/*Input
+	rAdjList	- adjacency list of the residual graph
+	nodes		- Number of nodes of residual graph
+	source		- the source vertex to start bfs
+	sink		- the end vertex to find path
+	parent		- used to track the parent node of the path
+  Return
+	bool		- whether a path is available to end vertex or not
+  Description
+	To check whether there exists a path from source to end vertex*/
 bool BFS(Edge** rAdjList, int nodes, int source, int sink, int** parent){
 	
 	bool visited[nodes];
 	Edge* temp;
 	int node, i;
+	//Initialize visited array with FALSE
 	memset(visited, 0, sizeof(visited));
 
 	createQueue();
 	
 	enqueue(source);
 	visited[source] = true;
+	/*Parent
+		To track the parent node of every node in the BFS path
+		[0] - stores the parent node index
+		[1] - stores the edge capacity to reach the parent node*/
 	parent[source][0] = -1;
 	parent[source][1] = 0;
 
@@ -114,26 +155,26 @@ bool BFS(Edge** rAdjList, int nodes, int source, int sink, int** parent){
 				visited[temp->node] = true;
 			}
 		}
-		/*for(i=0; i<nodes; i++){
-			if(visited[i] == false && rAdjList[node][i] > 0){
-				enqueue(i);
-				parent[i] = node;
-				visited[i] = true;
-			}
-		}*/
 	}
 
 	return (visited[sink] == true);
 }
 
-int maximumFlowAlg(Edge** adjList, int nodes, int source, int sink){
+/*Input
+	adjList	- adjacency list of the input graph
+	nodes	- number of nodes of the input graph
+	source	- source vertex to find network flow
+	sink	- End vertex to find network flow
+  Description
+	To find the maximum network flow between source and end vertex*/
+void maximumFlowAlg(Edge** adjList, int nodes, int source, int sink){
 
-	int i, index, maxFlow = 0, flow;
+	int i, j, index, maxFlow = 0, flow, maxCluster=0, cluster=0;
 	int** parent;
+	int **output;
 	bool flag=false;
 
 	Edge *temp, *temp1;
-	Edge* newEdge;
 	Edge** rAdjList;
 
 	rAdjList = (Edge**) malloc(nodes * sizeof(Edge*));
@@ -155,39 +196,44 @@ int maximumFlowAlg(Edge** adjList, int nodes, int source, int sink){
 
 	while(BFS(rAdjList, nodes, source, sink, parent)){
 		flow = INT_MAX;
+		// To find the bottleNeck in the BFS path
 		for(i=nodes-1; parent[i][0]!=-1; i=parent[i][0]){
 			flow = (parent[i][1]<flow?parent[i][1]:flow);
 		}
 		flag = false;
+		//Cluster - To track the maximum no of edges in a single node
+		cluster = 0;
 		for(i=nodes-1; parent[i][0]!=-1; i=parent[i][0]){
+			//index - index of parent node
 			index = parent[i][0];
+			//temp 	- pointer to residual graph's index node
 			temp = rAdjList[index];
-			printf("i - %d index = %d, temp - %d", i, index, temp->node);
+			//temp1	- pointer to input graph's index node
 			temp1 = adjList[index];
-			printf("i - %d index = %d, temp1 - %d", i, index, temp1->node);
 			
 			while(temp!= NULL){
+				while(temp1!=NULL){
+					if(temp1->node != i)
+						temp1 = temp1->next;
+					else
+						break;
+				}
 				if(temp->node != i){
+					cluster++;
 					temp = temp->next;
-					temp1 = temp1->next;
 					continue;
 				}else{
-					if(temp->capacity == flow){
-						temp->capacity -= flow;
-						temp1->residualCapacity += flow;
-						//rAdjList[i] = addEdge(rAdjList[i], index, flow);
-					}else{
-						temp->capacity -= flow;
-						temp1->residualCapacity += flow;
-						//rAdjList[i] = addEdge(rAdjList[i], index, flow);
-					}
+					//Decrement the capacity in residual graph
+					temp->capacity -= flow;
+					//To track the flow through network in input graph to print output
+					temp1->residualCapacity += flow;
 					break;
 				}
 			}
 			temp = rAdjList[i];
 			flag = false;
 			while(temp!= NULL){
-				if(temp->node != index){
+					if(temp->node != index){
 					temp = temp->next;
 					continue;
 				}else{
@@ -197,24 +243,36 @@ int maximumFlowAlg(Edge** adjList, int nodes, int source, int sink){
 				}
 			}
 			if(flag == false){
+				//Create a backedge in residual graph
 				rAdjList[i] = addEdge(rAdjList[i], index, flow);
 			}
+			if(maxCluster < cluster)
+				maxCluster = cluster;
 		}
 		maxFlow += flow;
 	}
+	/*To retain the order of input edges in output,
+	  we store the edges in an array and then print in reverse order*/
+	output = (int **) malloc (maxCluster * sizeof(int*));
+	for(i=0; i<maxCluster; i++)
+		output[i] = (int*) malloc (3 * sizeof(int));
+
 	printf("%d\n", maxFlow);
-	for(i=0; i<nodes; i++){
+	for(i=0, j=0; i<nodes; i++){
 		Edge* traverse = adjList[i];
+		j=0;
 		while(traverse != NULL){
-			//if(traverse->capacity!=0)
-			printf("%d %d %d\n", i, traverse->node, traverse->residualCapacity);
+			output[j][0] = i;
+			output[j][1] = traverse->node;
+			output[j++][2] = traverse->residualCapacity;
 			traverse = traverse->next;
 		}
-		printf("\n");
+		for(j=j-1; j>=0; j--)
+			printf("%d %d %d\n", output[j][0], output[j][1], output[j][2]);
 	}
-	/*for(i=0; i<nodes; i++)}{
-		
-	}*/
+	free(output);
+	free(parent);
+	free(rAdjList);
 }
 
 int main(){
@@ -223,6 +281,7 @@ int main(){
 	int node1, node2, capacity;
 	Edge** adjList;
 
+	//Input no of nodes and edges
 	scanf("%d", &nodes);
 	scanf("%d", &edges);
 
@@ -241,15 +300,7 @@ int main(){
 	}
 	maximumFlowAlg(adjList, nodes, 0, nodes-1);
 
-	/*for(i=0; i<nodes; i++){
-		Edge* traverse = adjList[i];
-		printf("adjList[%d] -> ", i);
-		while(traverse != NULL){
-			printf("(%d %d)->", traverse->node, traverse->capacity);
-			traverse = traverse->next;
-		}
-		printf("\n");
-	}*/
+	free(adjList);
 	
 	return 0;
 }
