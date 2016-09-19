@@ -226,7 +226,8 @@ void maximumFlowAlg(Edge** adjList, int nodes, int source, int sink){
 					//Decrement the capacity in residual graph
 					temp->capacity -= flow;
 					//To track the flow through network in input graph to print output
-					temp1->residualCapacity += flow;
+					if(temp->residualCapacity != -1)
+						temp1->residualCapacity += flow;
 					break;
 				}
 			}
@@ -245,6 +246,8 @@ void maximumFlowAlg(Edge** adjList, int nodes, int source, int sink){
 			if(flag == false){
 				//Create a backedge in residual graph
 				rAdjList[i] = addEdge(rAdjList[i], index, flow);
+				temp = rAdjList[i];
+				temp->residualCapacity = -1;
 			}
 			if(maxCluster < cluster)
 				maxCluster = cluster;
@@ -253,8 +256,8 @@ void maximumFlowAlg(Edge** adjList, int nodes, int source, int sink){
 	}
 	/*To retain the order of input edges in output,
 	  we store the edges in an array and then print in reverse order*/
-	output = (int **) malloc (maxCluster * sizeof(int*));
-	for(i=0; i<maxCluster; i++)
+	output = (int **) malloc (nodes-1 * sizeof(int*));
+	for(i=0; i<nodes-1; i++)
 		output[i] = (int*) malloc (3 * sizeof(int));
 
 	printf("%d\n", maxFlow);
